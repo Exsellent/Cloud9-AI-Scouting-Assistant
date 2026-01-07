@@ -1,0 +1,8 @@
+FROM nginx:alpine
+
+# adding curl for healthcheck
+RUN apk add --no-cache curl
+
+# Copying the static
+COPY ./assets /usr/share/nginx/html
+
