@@ -1,0 +1,136 @@
+services:
+  draft_coach:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.draft_coach
+    ports:
+      - "8401:8401"
+    env_file:
+      - .env
+    healthcheck:
+      test: [ "CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8401/health')\" || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - agent-net
+
+  match_history:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.match_history
+    ports:
+      - "8402:8402"
+    env_file:
+      - .env
+    healthcheck:
+      test: [ "CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8402/health')\" || exit 1" ]
+    networks:
+      - agent-net
+    dns:
+      - 8.8.8.8
+
+  counter_play:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.counter_play
+    ports:
+      - "8403:8403"
+    env_file:
+      - .env
+    healthcheck:
+      test: [ "CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8403/health')\" || exit 1" ]
+    networks:
+      - agent-net
+    dns:
+      - 8.8.8.8
+
+  scouting_report:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.scouting_report
+    ports:
+      - "8404:8404"
+    env_file:
+      - .env
+    healthcheck:
+      test: [ "CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8404/health')\" || exit 1" ]
+    networks:
+      - agent-net
+    dns:
+      - 8.8.8.8
+
+  system_health:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.system_health
+    ports:
+      - "8406:8406"
+    env_file:
+      - .env
+    healthcheck:
+      test: [ "CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8406/health')\" || exit 1" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - agent-net
+    dns:
+      - 8.8.8.8
+
+  stats_tracker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.stats_tracker
+    ports:
+      - "8407:8407"
+    env_file:
+      - .env
+    healthcheck:
+      test: [ "CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8407/health')\" || exit 1" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - agent-net
+    dns:
+      - 8.8.8.8
+
+  static-scouting:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.static
+
+    ports:
+      - "8001:80"
+    volumes:
+      - ./index.html:/usr/share/nginx/html/index.html:ro
+    networks:
+      - agent-net
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost/playbook.png" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    dns:
+      - 8.8.8.8
+
+  n8n:
+    image: n8nio/n8n
+    restart: always
+    ports:
+      - "5680:5678"
+    volumes:
+      - n8n_cloud9:/home/node/.n8n
+    env_file:
+      - .env
+    networks:
+      - agent-net
+
+
+networks:
+  agent-net:
+    driver: bridge
+
+volumes:
+  n8n_cloud9:
