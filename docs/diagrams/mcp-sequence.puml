@@ -1,0 +1,65 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam backgroundColor white
+
+' Colors of the participants
+skinparam participant {
+  BackgroundColor #F0F8FF
+  BorderColor #333333
+  FontSize 13
+  FontStyle bold
+}
+
+' Default arrow colors
+skinparam sequenceArrowThickness 2
+skinparam sequenceLifeLineBorderColor #666666
+
+autonumber
+title Esports MCP Message Flow
+
+participant "n8n" as N8N #FFA500
+participant "Draft Coach" as DraftCoach #87CEEB
+participant "Counter Play" as CounterPlay #F08080
+participant "Scouting Report" as ScoutingReport #DDA0DD
+participant "Stats Tracker" as StatsTracker #90EE90
+
+' 1. n8n -> Draft Coach
+N8N -[#0000FF]> DraftCoach : <color:blue><b>POST /mcp { method, params }</b></color>
+
+' 2. Internal reasoning
+activate DraftCoach #E6F3FF
+DraftCoach -[#808080]> DraftCoach : <color:gray><i>reasoning (draft planning steps)</i></color>
+
+' 3. Draft Coach -> Counter Play
+DraftCoach -[#DC143C]> CounterPlay : <color:red><b>MCP request</b></color>
+activate CounterPlay #FFE4E4
+CounterPlay --[#DC143C]> DraftCoach : <color:red>JSON + reasoning</color>
+deactivate CounterPlay
+
+' 5. Draft Coach -> Scouting Report
+DraftCoach -[#9932CC]> ScoutingReport : <color:purple><b>MCP request</b></color>
+activate ScoutingReport #F3E6FF
+ScoutingReport --[#9932CC]> DraftCoach : <color:purple>opponent analysis / report</color>
+deactivate ScoutingReport
+
+' 7. Draft Coach -> Stats Tracker
+DraftCoach -[#228B22]> StatsTracker : <color:green><b>MCP request</b></color>
+activate StatsTracker #E6FFE6
+StatsTracker --[#228B22]> DraftCoach : <color:green>metrics recorded</color>
+deactivate StatsTracker
+
+deactivate DraftCoach
+
+' 9. Draft Coach -> n8n
+DraftCoach --[#0000FF]> N8N : <color:blue><b>structured response (JSON)</b></color>
+
+legend right
+  |= <color:blue>■</color> |= n8n communication |
+  |= <color:red>■</color> |= Counter strategies |
+  |= <color:purple>■</color> |= Scouting reports |
+  |= <color:green>■</color> |= Stats collection |
+  |= <color:gray>■</color> |= Internal reasoning |
+endlegend
+
+@enduml

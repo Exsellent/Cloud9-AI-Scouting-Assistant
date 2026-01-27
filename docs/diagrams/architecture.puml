@@ -1,0 +1,106 @@
+@startuml
+!theme plain
+skinparam shadowing false
+skinparam backgroundColor white
+skinparam componentStyle rectangle
+skinparam padding 3
+
+' Styles for components
+skinparam component {
+  BorderColor #333333
+  FontSize 12
+  ArrowThickness 2
+}
+
+skinparam note {
+  BackgroundColor #FFFACD
+  BorderColor #DAA520
+}
+
+title Cloud9 AI Scouting Assistant — Architecture (Playbook)
+
+actor "Coach / Analyst" as coach #87CEEB
+
+cloud "External Services" {
+  component "Groq LLM\n(Llama 3.3)" as groq #F08080
+  component "GRID Esports API" as grid #F0E68C
+  component "Prometheus\n(Metrics Storage)" as prometheus #D3D3D3
+}
+
+component "Static Assets\n(Nginx)" as static #90EE90
+
+component "n8n\n(Workflow Orchestrator)" as n8n #FFA500
+
+package "Esports Agents (Docker Containers)" {
+  component "Draft Coach\n:8401" as draft_coach #87CEEB
+  component "Match History\n:8402" as match_history #90EE90
+  component "Counter Play\n:8403" as counter_play #FFB6C1
+  component "Scouting Report\n:8404" as scouting_report #FFFFE0
+  component "System Health\n:8406" as system_health #FF6347
+  component "Stats Tracker\n:8407" as stats_tracker #D3D3D3
+}
+
+' Notes
+note right of n8n
+  <b>Central Orchestrator</b>
+  • Starts workflows
+  • Calls agents via HTTP/MCP
+end note
+
+note right of draft_coach
+  <b>Draft strategy</b>
+  Recommends bans/picks
+end note
+
+note right of system_health
+  <b>Checks periodically</b>
+  /health of all agents
+end note
+
+note right of stats_tracker
+  <b>Collects match stats</b>
+  and performance metrics
+end note
+
+note right of scouting_report
+  <b>Opponent analysis</b>
+  Generates coach-friendly reports
+end note
+
+' Connections with colored arrows
+coach -[#0000FF]-> n8n : <color:blue>Manual trigger / Webhook</color>
+
+n8n -[#228B22]-> draft_coach : <color:green>MCP call</color>
+n8n -[#FF8C00]-> match_history : <color:orange>MCP call</color>
+n8n -[#DC143C]-> counter_play : <color:red>MCP call</color>
+n8n -[#9932CC]-> scouting_report : <color:purple>MCP call</color>
+n8n -[#808080]-> system_health : <color:gray>MCP call</color>
+n8n -[#008080]-> stats_tracker : <color:teal>MCP call</color>
+
+draft_coach -[#0000FF]-> groq : <color:blue>LLM</color>
+scouting_report -[#9932CC]-> groq : <color:purple>LLM</color>
+match_history -[#228B22]-> groq : <color:green>LLM</color>
+counter_play -[#DC143C]-> groq : <color:red>LLM</color>
+
+scouting_report -[#FF8C00]-> grid : <color:orange>Fetch match data</color>
+stats_tracker -[#008080]-> prometheus : <color:teal>Store metrics</color>
+
+system_health -[#DC143C]down-> draft_coach
+system_health -[#DC143C]down-> match_history
+system_health -[#DC143C]down-> counter_play
+system_health -[#DC143C]down-> scouting_report
+system_health -[#DC143C]down-> stats_tracker
+
+scouting_report -[#228B22]-> static : <color:green>Fetch assets/visuals</color>
+
+legend right
+  |= <color:blue>■</color> |= Draft Coach / LLM |
+  |= <color:green>■</color> |= Match History / Assets |
+  |= <color:orange>■</color> |= GRID API |
+  |= <color:red>■</color> |= Counter strategies |
+  |= <color:purple>■</color> |= Scouting reports |
+  |= <color:gray>■</color> |= Health checks |
+  |= <color:teal>■</color> |= Stats & metrics |
+endlegend
+
+@enduml

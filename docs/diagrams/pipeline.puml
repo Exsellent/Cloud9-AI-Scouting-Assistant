@@ -1,0 +1,63 @@
+@startuml
+skinparam shadowing false
+skinparam backgroundColor white
+
+skinparam participant {
+  BackgroundColor #F0F8FF
+  BorderColor #4682B4
+}
+
+actor User #Orange
+participant "n8n" as n8n #FFE4B5
+participant "Draft Coach" as draft_coach #87CEEB
+participant "Match History" as match_history #90EE90
+participant "Counter Play" as counter_play #F08080
+participant "Scouting Report" as scouting_report #F0E68C
+participant "System Health" as system_health #DDA0DD
+participant "Stats Tracker" as stats_tracker #D3D3D3
+participant "Static Assets" as static_scouting #C0C0C0
+
+title n8n → Esports Agent Pipeline
+
+User -> n8n: Trigger (webhook/schedule)
+n8n -> draft_coach: Send MCP request
+
+activate draft_coach #D4E9FF
+draft_coach -> draft_coach: Analyze input
+draft_coach -> draft_coach: Create draft plan
+
+par Parallel Agent Calls
+  draft_coach -> match_history: Call /mcp (port 8402)
+  activate match_history #90EE90
+  match_history --> draft_coach: JSON response
+  deactivate match_history
+else
+  draft_coach -> counter_play: Call /mcp (port 8403)
+  activate counter_play #F08080
+  counter_play --> draft_coach: JSON response
+  deactivate counter_play
+else
+  draft_coach -> scouting_report: Call /mcp (port 8404)
+  activate scouting_report #F0E68C
+  scouting_report --> draft_coach: JSON response
+  deactivate scouting_report
+else
+  draft_coach -> system_health: Call /mcp (port 8406)
+  activate system_health #DDA0DD
+  system_health --> draft_coach: JSON response
+  deactivate system_health
+else
+  draft_coach -> stats_tracker: Call /mcp (port 8407)
+  activate stats_tracker #D3D3D3
+  stats_tracker --> draft_coach: JSON response
+  deactivate stats_tracker
+end
+
+draft_coach -> draft_coach: Collect responses
+draft_coach -> draft_coach: Aggregate result
+deactivate draft_coach
+
+draft_coach --> n8n: Final result
+n8n --> User: Response
+
+@enduml
