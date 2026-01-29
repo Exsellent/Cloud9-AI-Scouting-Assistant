@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="icon" href="data:,">
+    <title>Cloud9 AI Scouting Assistant</title>
+    <style>
+        :root {
+            --cloud9-blue: #00A3E0;
+            --cloud9-white: #FFFFFF;
+            --cloud9-gold: #FFD700;
+            --cloud9-black: #000000;
+            --cloud9-dark: #0A0E27;
+            --jetbrains-red: #FF0066;
+
+            /* UI Colors - Dark Theme */
+            --bg-dark: #0A0E27;
+            --surface: #151B3B;
+            --text-main: #FFFFFF;
+            --text-dim: #A0A8C0;
+            --border: #2A3350;
+            --input-bg: #1A2140;
+            --success: #00E676;
+            --warning: #FFD700;
+            --error: #FF0066;
+        }
+
+        [data-theme="light"] {
+            /* UI Colors - Light Theme */
+            --bg-dark: #F0F4F8;
+            --surface: #FFFFFF;
+            --text-main: #0A0E27;
+            --text-dim: #5A6B7D;
+            --border: #D1DAE5;
+            --input-bg: #F8FAFC;
+            --success: #00C853;
+            --warning: #FFA726;
+            --error: #F44336;
+        }
+
+        * {
+            box-sizing: border-box;
+            transition: all 0.25s ease;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #0F1535 100%);
+            color: var(--text-main);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        [data-theme="light"] body {
+            background: linear-gradient(135deg, #F0F4F8 0%, #E8EFF5 100%);
+        }
+
+        .header {
+            width: 100%;
+            max-width: 1400px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(90deg, rgba(0, 163, 224, 0.1), rgba(255, 215, 0, 0.1));
+            border-radius: 16px;
+            border: 1px solid var(--cloud9-blue);
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--cloud9-blue), var(--cloud9-gold));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 3s ease infinite;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        @keyframes shimmer {
+            0%, 100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: var(--jetbrains-red);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 12px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: linear-gradient(135deg, var(--surface) 0%, rgba(21, 27, 59, 0.8) 100%);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 8px 32px rgba(0, 163, 224, 0.15);
+        }
+
+        [data-theme="light"] .panel {
+            background: var(--surface);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        .panel:hover {
+            box-shadow: 0 12px 48px rgba(0, 163, 224, 0.25);
+            border-color: var(--cloud9-blue);
+        }
+
+        [data-theme="light"] .panel:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .panel-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--cloud9-blue);
+        }
+
+        .label {
+            font-size: 14px;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        textarea, select {
+            width: 100%;
+            background-color: var(--input-bg);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-main);
+            padding: 14px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+        textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--cloud9-blue);
+            box-shadow: 0 0 0 3px rgba(0, 163, 224, 0.1);
+        }
+
+        select {
+            cursor: pointer;
+            margin-bottom: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            color: var(--cloud9-black);
+            background: linear-gradient(135deg, var(--cloud9-blue), var(--cloud9-gold));
+            box-shadow: 0 4px 16px rgba(0, 163, 224, 0.3);
+            margin-top: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(255, 215, 0, 0.5);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .agent-card {
+            background: linear-gradient(135deg, var(--input-bg), rgba(26, 33, 64, 0.6));
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        [data-theme="light"] .agent-card {
+            background: linear-gradient(135deg, var(--input-bg), rgba(248, 250, 252, 0.8));
+        }
+
+        .agent-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--cloud9-blue), var(--cloud9-gold));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .agent-card:hover {
+            border-color: var(--cloud9-blue);
+            transform: translateY(-4px);
+        }
+
+        .agent-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .agent-card.active {
+            border-color: var(--cloud9-gold);
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(0, 163, 224, 0.1));
+        }
+
+        .agent-card.working {
+            animation: pulse 2s ease-in-out infinite;
+            border-color: var(--cloud9-blue);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(0, 163, 224, 0.7);
+                border-color: var(--cloud9-blue);
+            }
+            50% {
+                box-shadow: 0 0 0 12px rgba(0, 163, 224, 0);
+                border-color: var(--cloud9-gold);
+            }
+        }
+
+        .agent-status {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--text-dim);
+            box-shadow: 0 0 8px currentColor;
+        }
+
+        .agent-status.success {
+            background-color: var(--success);
+            animation: blink 2s ease infinite;
+        }
+
+        .agent-status.working {
+            background-color: var(--cloud9-gold);
+            animation: blink 1s ease infinite;
+        }
+
+        .agent-status.error {
+            background-color: var(--error);
+        }
+
+        @keyframes blink {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        .agent-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 2px 4px rgba(0, 163, 224, 0.3));
+        }
+
+        .agent-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .agent-port {
+            font-size: 11px;
+            color: var(--cloud9-blue);
+            font-weight: 500;
+        }
+
+        .output-container {
+            margin-top: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .output-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .output-container::-webkit-scrollbar-track {
+            background: var(--input-bg);
+            border-radius: 4px;
+        }
+
+        .output-container::-webkit-scrollbar-thumb {
+            background: var(--cloud9-blue);
+            border-radius: 4px;
+        }
+
+        .log-entry {
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, var(--input-bg), rgba(26, 33, 64, 0.5));
+            border-left: 4px solid var(--cloud9-blue);
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            animation: slideIn 0.3s ease;
+        }
+
+        [data-theme="light"] .log-entry {
+            background: linear-gradient(90deg, var(--input-bg), rgba(248, 250, 252, 0.5));
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .log-entry.success {
+            border-left-color: var(--success);
+            background: linear-gradient(90deg, rgba(0, 230, 118, 0.1), transparent);
+        }
+
+        [data-theme="light"] .log-entry.success {
+            background: linear-gradient(90deg, rgba(0, 200, 83, 0.1), transparent);
+        }
+
+        .log-entry.error {
+            border-left-color: var(--error);
+            background: linear-gradient(90deg, rgba(255, 0, 102, 0.1), transparent);
+        }
+
+        [data-theme="light"] .log-entry.error {
+            background: linear-gradient(90deg, rgba(244, 67, 54, 0.1), transparent);
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, var(--input-bg), rgba(26, 33, 64, 0.8));
+            border: 2px solid var(--cloud9-blue);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 16px;
+            box-shadow: 0 4px 16px rgba(0, 163, 224, 0.2);
+        }
+
+        [data-theme="light"] .result-card {
+            background: var(--input-bg);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-card h4 {
+            margin: 0 0 12px 0;
+            color: var(--cloud9-gold);
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        [data-theme="light"] .result-card h4 {
+            color: var(--cloud9-blue);
+        }
+
+        .result-card pre {
+            margin: 0;
+            font-size: 12px;
+            color: var(--text-dim);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid var(--cloud9-blue);
+        }
+
+        [data-theme="light"] .result-card pre {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--text-main);
+            border-left: 3px solid var(--cloud9-blue);
+        }
+
+        .loader {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: var(--cloud9-gold);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            padding: 12px;
+            background: rgba(0, 163, 224, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 163, 224, 0.2);
+        }
+
+        [data-theme="light"] .stats-bar {
+            background: rgba(0, 163, 224, 0.08);
+        }
+
+        .stat-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--cloud9-gold);
+        }
+
+        [data-theme="light"] .stat-value {
+            color: var(--cloud9-blue);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 12px;
+        }
+
+        .footer a {
+            color: var(--cloud9-blue);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            color: var(--cloud9-gold);
+        }
+
+        /* Theme Switch */
+        .theme-switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--text-dim);
+            font-weight: 500;
+        }
+
+        .switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+
+        .switch input {
+            display: none;
+        }
+
+        .slider {
+            position: absolute;
+            inset: 0;
+            background-color: var(--border);
+            border-radius: 26px;
+            cursor: pointer;
+            transition: 0.4s;
+        }
+
+        .slider::before {
+            content: "";
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            left: 4px;
+            top: 4px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+
+        input:checked + .slider {
+            background: linear-gradient(90deg, var(--cloud9-blue), var(--cloud9-gold));
+        }
+
+        input:checked + .slider::before {
+            transform: translateX(24px);
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <div>
+        <div class="title">
+            🏆 Cloud9 AI Scouting Assistant
+            <span class="badge">LIVE</span>
+        </div>
+        <div class="subtitle">Powered by Groq LLM × GRID Esports API × JetBrains</div>
+    </div>
+    <div class="theme-switch">
+        <span id="themeLabel">Dark</span>
+        <label class="switch">
+            <input type="checkbox" id="themeToggle">
+            <span class="slider"></span>
+        </label>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Input Panel -->
+    <div class="panel">
+        <div class="panel-title">🎮 Scout Opponent</div>
+
+        <div class="label">Select Analysis Agent</div>
+        <select id="agentSelect">
+            <option value="scouting_report">🔍 Scouting Report - Automated opponent analysis</option>
+            <option value="draft_coach">🎯 Draft Coach - Pick/ban strategy (LoL)</option>
+            <option value="match_history">📊 Match History - Form & trends analysis</option>
+            <option value="counter_play">⚔️ Counter Play - Weakness detection & tactics</option>
+            <option value="stats_tracker">📈 Stats Tracker - Deep performance metrics</option>
+            <option value="system_health">💚 System Health - Agent monitoring</option>
+        </select>
+
+        <div class="label">Opponent Team Name</div>
+        <textarea id="taskInput" placeholder="Example: Sentinels, G2 Esports, Team Liquid..."></textarea>
+
+        <div class="label">Game</div>
+        <select id="gameSelect">
+            <option value="valorant">Valorant</option>
+            <option value="lol">League of Legends</option>
+        </select>
+
+        <button onclick="executeAgent()" id="executeBtn">
+            ⚡ Generate Scouting Report
+        </button>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="totalRequests">0</div>
+                <div class="stat-label">Total Requests</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="successCount">0</div>
+                <div class="stat-label">Successful</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="avgTime">0s</div>
+                <div class="stat-label">Avg Time</div>
+            </div>
+        </div>
+
+        <div class="panel-title" style="margin-top: 28px;">🤖 Agent Status</div>
+        <div class="agents-grid" id="agentsGrid"></div>
+    </div>
+
+    <!-- Output Panel -->
+    <div class="panel">
+        <div class="panel-title">📋 Analysis Results</div>
+        <div class="output-container" id="outputContainer">
+            <div class="log-entry">
+                💡 Select an agent and enter opponent team name to start scouting
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    Built for <a href="https://cloud9.devpost.com/" target="_blank">Cloud9 Hackathon 2026</a>
+    | Powered by <strong>Groq</strong> & <strong>GRID</strong>
+    | <a href="https://github.com/Exsellent/Cloud9-AI-Scouting-Assistant" target="_blank">GitHub</a>
+</div>
+
+<script>
+    // Configuration
+    const API_BASE = 'http://localhost';
+
+    const agents = [
+        {id: 'scouting_report', name: 'Scouting Report', port: 8404, icon: '🔍', method: 'generate_scout_report'},
+        {id: 'draft_coach', name: 'Draft Coach', port: 8401, icon: '🎯', method: 'recommend_draft'},
+        {id: 'match_history', name: 'Match History', port: 8402, icon: '📊', method: 'evaluate_form'},
+        {id: 'counter_play', name: 'Counter Play', port: 8403, icon: '⚔️', method: 'analyze_counter_strategies'},
+        {id: 'stats_tracker', name: 'Stats Tracker', port: 8407, icon: '📈', method: 'analyze_team_stats'},
+        {id: 'system_health', name: 'System Health', port: 8406, icon: '💚', method: 'quick_ping'}
+    ];
+
+    // Stats tracking
+    let stats = {
+        totalRequests: 0,
+        successCount: 0,
+        totalTime: 0
+    };
+
+    // Initialize agents grid
+    function initAgentsGrid() {
+        const grid = document.getElementById('agentsGrid');
+        grid.innerHTML = agents.map(agent => `
+            <div class="agent-card" data-id="${agent.id}">
+                <div class="agent-status"></div>
+                <div class="agent-icon">${agent.icon}</div>
+                <div class="agent-name">${agent.name}</div>
+                <div class="agent-port">:${agent.port}</div>
+            </div>
+        `).join('');
+    }
+
+    // Add log entry
+    function addLog(message, type = 'info') {
+        const container = document.getElementById('outputContainer');
+        const entry = document.createElement('div');
+        entry.className = `log-entry ${type}`;
+        entry.textContent = message;
+        container.appendChild(entry);
+        container.scrollTop = container.scrollHeight;
+    }
+
+
+    function clearLogs() {
+        document.getElementById('outputContainer').innerHTML = '';
+    }
+
+
+    function updateAgentStatus(agentId, status) {
+        const card = document.querySelector(`[data-id="${agentId}"]`);
+        if (card) {
+            const statusDot = card.querySelector('.agent-status');
+            statusDot.className = `agent-status ${status}`;
+
+            card.classList.remove('working', 'active');
+            if (status === 'working') {
+                card.classList.add('working');
+            } else if (status === 'success') {
+                card.classList.add('active');
+            }
+        }
+    }
+
+
+    function updateStats() {
+        document.getElementById('totalRequests').textContent = stats.totalRequests;
+        document.getElementById('successCount').textContent = stats.successCount;
+        const avgTime = stats.totalRequests > 0 ? (stats.totalTime / stats.totalRequests).toFixed(1) : 0;
+        document.getElementById('avgTime').textContent = avgTime + 's';
+    }
+
+    function buildParams(agentId, teamName, game) {
+
+        if (agentId === 'system_health') {
+            return {};
+        }
+
+        // Match history needs team_name instead of opponent_team
+        if (agentId === 'match_history') {
+            return {
+                team_name: teamName || 'Sentinels',
+                game: game || 'valorant',
+                recent_matches: 8
+            };
+        }
+
+        // Stats tracker needs team_name instead of opponent_team
+        if (agentId === 'stats_tracker') {
+            return {
+                team_name: teamName || 'Sentinels',
+                game: game || 'valorant',
+                recent_matches: 10
+            };
+        }
+
+        // Draft coach - always LoL, needs specific params
+        if (agentId === 'draft_coach') {
+            return {
+                opponent_team: teamName || 'Sentinels',
+                our_side: 'blue',
+                game: 'lol'  // Always LoL for draft
+            };
+        }
+
+        // Scouting report and counter play - standard params
+        return {
+            opponent_team: teamName || 'Sentinels',
+            game: game || 'valorant',
+            recent_matches: 5
+        };
+    }
+
+    // Execute agent
+    async function executeAgent() {
+        const select = document.getElementById('agentSelect');
+        const input = document.getElementById('taskInput');
+        const gameSelect = document.getElementById('gameSelect');
+        const btn = document.getElementById('executeBtn');
+
+        const selectedId = select.value;
+        const agent = agents.find(a => a.id === selectedId);
+        const teamName = input.value.trim();
+        const game = gameSelect.value;
+
+        if (!agent) {
+            addLog('❌ Agent not found', 'error');
+            return;
+        }
+
+        if (!teamName && agent.id !== 'system_health') {
+            addLog('❌ Please enter opponent team name', 'error');
+            return;
+        }
+
+        // UI Updates
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loader"></span> Analyzing...';
+        clearLogs();
+        addLog(`🚀 Executing ${agent.name} on port ${agent.port}...`);
+        updateAgentStatus(agent.id, 'working');
+
+        const startTime = Date.now();
+
+        try {
+            const params = buildParams(agent.id, teamName, game);
+            const url = `${API_BASE}:${agent.port}/mcp`;
+
+            addLog(`📡 Fetching data for ${teamName || 'system'}...`);
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    method: agent.method,
+                    params: params
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+
+            // Update stats
+            stats.totalRequests++;
+            stats.successCount++;
+            stats.totalTime += parseFloat(elapsed);
+            updateStats();
+
+            addLog(`✅ ${agent.name} completed in ${elapsed}s`, 'success');
+            updateAgentStatus(agent.id, 'success');
+
+            // Display results
+            displayResults(agent, data);
+
+        } catch (error) {
+            console.error('Agent execution error:', error);
+
+            stats.totalRequests++;
+            updateStats();
+
+            let errorMsg = error.message;
+            if (error.message.includes('Failed to fetch')) {
+                errorMsg = 'Cannot connect to agent. Make sure CORS is enabled on agents.';
+            }
+
+            addLog(`❌ Error: ${errorMsg}`, 'error');
+            updateAgentStatus(agent.id, 'error');
+
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '⚡ Generate Scouting Report';
+        }
+    }
+
+    // Display results
+    function displayResults(agent, data) {
+        const container = document.getElementById('outputContainer');
+        const resultCard = document.createElement('div');
+        resultCard.className = 'result-card';
+
+        // Extract key information
+        let summary = '';
+
+        if (data.report) {
+            summary += `<strong>📝 Scouting Report Generated</strong><br>`;
+        }
+        if (data.recommendation) {
+            summary += `<strong>🎯 Draft Strategy Ready</strong><br>`;
+        }
+        if (data.win_rate !== undefined) {
+            summary += `<strong>Win Rate:</strong> ${data.win_rate}%<br>`;
+        }
+        if (data.form_status) {
+            summary += `<strong>Current Form:</strong> ${data.form_status}<br>`;
+        }
+        if (data.matches_analyzed !== undefined) {
+            summary += `<strong>Matches Analyzed:</strong> ${data.matches_analyzed}<br>`;
+        }
+
+        resultCard.innerHTML = `
+            <h4>📦 ${agent.icon} ${agent.name} Results</h4>
+            ${summary ? `<div style="margin-bottom: 12px; color: var(--text-main);">${summary}</div>` : ''}
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+        `;
+        container.appendChild(resultCard);
+    }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', () => {
+        initAgentsGrid();
+        updateStats();
+        initTheme();
+        addLog('💡 Cloud9 AI Scouting System ready. Enter opponent name to begin analysis.');
+    });
+
+    // Theme Management
+    function initTheme() {
+        const themeToggle = document.getElementById('themeToggle');
+        const themeLabel = document.getElementById('themeLabel');
+        const savedTheme = localStorage.getItem('cloud9-theme') || 'dark';
+
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        themeToggle.checked = savedTheme === 'light';
+        themeLabel.textContent = savedTheme === 'dark' ? 'Dark' : 'Light';
+
+        themeToggle.addEventListener('change', () => {
+            const newTheme = themeToggle.checked ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            themeLabel.textContent = newTheme === 'dark' ? 'Dark' : 'Light';
+            localStorage.setItem('cloud9-theme', newTheme);
+            addLog(`🎨 Theme switched to ${newTheme} mode`);
+        });
+    }
+
+    // Handle Enter key in textarea
+    document.getElementById('taskInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.ctrlKey) {
+            executeAgent();
+        }
+    });
+</script>
+</body>
+</html>
