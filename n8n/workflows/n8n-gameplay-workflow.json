@@ -1,0 +1,238 @@
+{
+  "name": "Cloud9 Scouting Workflow Demo - Full 6 Agents + SystemHealth",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "opponent_team",
+              "value": "Sentinels"
+            },
+            {
+              "name": "game",
+              "value": "valorant"
+            }
+          ],
+          "number": [
+            {
+              "name": "recent_matches",
+              "value": 8
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-input",
+      "name": "Set Input Variables",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://draft_coach:8401/mcp",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"method\": \"recommend_draft\",\n  \"params\": {\n    \"opponent_team\": \"{{ $json.opponent_team }}\",\n    \"our_side\": \"blue\"\n  }\n}",
+        "options": {
+          "retryOnFail": {
+            "maxAttempts": 3,
+            "waitBetween": 1000
+          }
+        }
+      },
+      "id": "draft-coach-agent",
+      "name": "1. DraftCoach Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 100]
+    },
+    {
+      "parameters": {
+        "url": "http://match_history:8402/mcp",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"method\": \"evaluate_form\",\n  \"params\": {\n    \"team_name\": \"{{ $json.opponent_team }}\",\n    \"game\": \"{{ $json.game }}\",\n    \"recent_matches\": {{ $json.recent_matches }}\n  }\n}",
+        "options": {
+          "retryOnFail": {
+            "maxAttempts": 3,
+            "waitBetween": 1000
+          }
+        }
+      },
+      "id": "match-history-agent",
+      "name": "2. MatchHistory Agent (Form)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 250]
+    },
+    {
+      "parameters": {
+        "url": "http://counter_play:8403/mcp",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"method\": \"analyze_counter_strategies\",\n  \"params\": {\n    \"opponent_team\": \"{{ $json.opponent_team }}\",\n    \"game\": \"{{ $json.game }}\",\n    \"recent_matches\": {{ $json.recent_matches }}\n  }\n}",
+        "options": {
+          "retryOnFail": {
+            "maxAttempts": 3,
+            "waitBetween": 1500
+          }
+        }
+      },
+      "id": "counter-play-agent",
+      "name": "3. CounterPlay Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 400]
+    },
+    {
+      "parameters": {
+        "url": "http://stats_tracker:8407/mcp",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"method\": \"get_team_stats\",\n  \"params\": {\n    \"team_name\": \"{{ $json.opponent_team }}\",\n    \"game\": \"{{ $json.game }}\",\n    \"recent_matches\": {{ $json.recent_matches }}\n  }\n}",
+        "options": {
+          "retryOnFail": {
+            "maxAttempts": 3,
+            "waitBetween": 1000
+          }
+        }
+      },
+      "id": "stats-tracker-agent",
+      "name": "4. StatsTracker Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 550]
+    },
+    {
+      "parameters": {
+        "url": "http://system_health:8406/mcp",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"method\": \"get_system_health\",\n  \"params\": {}\n}",
+        "options": {
+          "retryOnFail": {
+            "maxAttempts": 3,
+            "waitBetween": 1000
+          }
+        }
+      },
+      "id": "system-health-agent",
+      "name": "5. SystemHealth Monitor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 700]
+    },
+    {
+      "parameters": {
+        "mode": "append",
+        "options": { "keepKeyMatches": false }
+      },
+      "id": "merge-all",
+      "name": "Merge All Agents",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Aggregate all agent results (5 + monitor)\nconst items = $input.all();\n\n// Safe access\nconst getJson = (index, fallback = {}) => (items[index]?.json) || fallback;\n\nconst draftCoach = getJson(0, { recommendation: 'Draft analysis unavailable' });\nconst matchHistory = getJson(1, { form_status: 'unknown' });\nconst counterPlay = getJson(2, { key_counter_strategies: [] });\nconst statsTracker = getJson(3, { win_rate: 'unknown' });\nconst systemHealth = getJson(4, { status: 'unknown' });\n\nconst input = $('Set Input Variables').item.json;\n\n// Form context for ScoutingReport\nconst context = `Current form: ${matchHistory.form_status || 'unknown'}. ` +\n  `Win rate: ${statsTracker.win_rate || 'unknown'}. ` +\n  `Key counters: ${(counterPlay.key_counter_strategies || []).join(', ')}. ` +\n  `Draft notes: ${(draftCoach.recommendation || '').substring(0, 200)}... ` +\n  `System health: ${systemHealth.status || 'healthy'}.`;\n\nreturn [{\n  json: {\n    timestamp: new Date().toISOString(),\n    opponent: input.opponent_team,\n    game: input.game,\n    recent_matches: input.recent_matches,\n    draft_recommendations: draftCoach,\n    current_form: matchHistory,\n    counter_strategies: counterPlay,\n    stats: statsTracker,\n    system_health: systemHealth,\n    additional_context: context\n  }\n}];"
+      },
+      "id": "aggregate-context",
+      "name": "Aggregate Context for Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 400]
+    },
+    {
+      "parameters": {
+        "url": "http://scouting_report:8404/mcp",
+        "method": "POST",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"method\": \"generate_scout_report\",\n  \"params\": {\n    \"opponent_team\": $json.opponent,\n    \"game\": $json.game,\n    \"recent_matches\": $json.recent_matches,\n    \"additional_context\": $json.additional_context\n  }\n} }}",
+        "options": {
+          "retryOnFail": {
+            "maxAttempts": 3,
+            "waitBetween": 2000
+          }
+        }
+      },
+      "id": "scouting-report-agent",
+      "name": "6. ScoutingReport Agent (Final)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1560, 400]
+    },
+    {
+      "parameters": {
+        "content": "=## 🎮 Full Scouting Report\n\n**Opponent:** {{ $json.opponent }}\n**Game:** {{ $json.game }}\n**Recent Matches:** {{ $json.recent_matches }}\n\n### Draft Recommendations\n{{ JSON.stringify($json.draft_recommendations, null, 2) }}\n\n### Current Form\n{{ JSON.stringify($json.current_form, null, 2) }}\n\n### Counter Strategies\n{{ JSON.stringify($json.counter_strategies, null, 2) }}\n\n### Stats Tracker\n{{ JSON.stringify($json.stats, null, 2) }}\n\n### System Health\n{{ JSON.stringify($json.system_health, null, 2) }}\n\n### Final Generated Report\n{{ $json.summary || $json.report || 'Report generated successfully' }}\n\n---\n📅 {{ $json.timestamp }}",
+        "height": 1000,
+        "width": 750
+      },
+      "id": "final-report",
+      "name": "📊 Final Scouting Report",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [1780, 400]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{"node": "Set Input Variables", "type": "main", "index": 0}]]
+    },
+    "Set Input Variables": {
+      "main": [
+        [
+          {"node": "1. DraftCoach Agent", "type": "main", "index": 0},
+          {"node": "2. MatchHistory Agent (Form)", "type": "main", "index": 0},
+          {"node": "3. CounterPlay Agent", "type": "main", "index": 0},
+          {"node": "4. StatsTracker Agent", "type": "main", "index": 0},
+          {"node": "5. SystemHealth Monitor", "type": "main", "index": 0}
+        ]
+      ]
+    },
+    "1. DraftCoach Agent": {
+      "main": [[{"node": "Merge All Agents", "type": "main", "index": 0}]]
+    },
+    "2. MatchHistory Agent (Form)": {
+      "main": [[{"node": "Merge All Agents", "type": "main", "index": 1}]]
+    },
+    "3. CounterPlay Agent": {
+      "main": [[{"node": "Merge All Agents", "type": "main", "index": 2}]]
+    },
+    "4. StatsTracker Agent": {
+      "main": [[{"node": "Merge All Agents", "type": "main", "index": 3}]]
+    },
+    "5. SystemHealth Monitor": {
+      "main": [[{"node": "Merge All Agents", "type": "main", "index": 4}]]
+    },
+    "Merge All Agents": {
+      "main": [[{"node": "Aggregate Context for Report", "type": "main", "index": 0}]]
+    },
+    "Aggregate Context for Report": {
+      "main": [[{"node": "6. ScoutingReport Agent (Final)", "type": "main", "index": 0}]]
+    },
+    "6. ScoutingReport Agent (Final)": {
+      "main": [[{"node": "📊 Final Scouting Report", "type": "main", "index": 0}]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
