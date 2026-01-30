@@ -539,7 +539,6 @@ Include confidence qualifiers if sample is limited."""
         if llm_fallback or not player_report:
             player_report = f"Player statistics for {player_name or 'team'} limited. Data quality: {data_quality.sample_size_rating}. {', '.join(data_quality.limitations)}"
 
-        #
         # Step 6 - Completed
         self._next_step(reasoning, "Player analysis completed",
                         output_data={
@@ -618,8 +617,8 @@ Include confidence qualifiers if sample is limited."""
             "team_a": team_a,
             "team_b": team_b,
             "game": game,
-            "team_a_analysis": team_a_stats,  # Complete sub-analysis
-            "team_b_analysis": team_b_stats,  # Complete sub-analysis
+            "team_a_analysis": team_a_stats,
+            "team_b_analysis": team_b_stats,
             "overall_confidence": overall_confidence,
             "reasoning": reasoning  # Main comparison reasoning only
         }

@@ -7,7 +7,7 @@ app = agent.app
 @app.get("/")
 async def root():
     return {
-        "message": "Multi-agent-devops-assistant Agent is running!",
+        "message": "Cloud9 AI Scouting Assistant - SystemHealth Agent is running!",
         "agent": agent.name,
         "available_tools": list(agent.tools.keys()),
         "docs": "/docs"

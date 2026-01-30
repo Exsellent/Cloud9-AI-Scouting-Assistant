@@ -252,7 +252,7 @@ class SystemHealthAgent(MCPAgent):
         Returns:
             Integer score from 0 to 100
         """
-        #3: If unreachable, other metrics are irrelevant
+        # 3: If unreachable, other metrics are irrelevant
         if not reachable:
             return 0  # Instant DOWN status, no further calculation
 
@@ -726,7 +726,7 @@ class SystemHealthAgent(MCPAgent):
             if h.status in ["CRITICAL", "DOWN"]
         )
 
-        #4: Priority-based system status (NOT average-based)
+        # 4: Priority-based system status (NOT average-based)
         overall_status = self._determine_system_status(agent_healths, critical_down_count)
         systemic_risk = critical_down_count >= self.SYSTEMIC_RISK_THRESHOLD
 

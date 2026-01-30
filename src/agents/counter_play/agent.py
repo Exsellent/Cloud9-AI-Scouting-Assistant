@@ -36,7 +36,6 @@ class CounterPlayAgent(MCPAgent):
     - opponent weakness detection
 
     """
-
     # Baseline counter-strategies when LLM is unavailable
     BASELINE_VALORANT_COUNTERS = [
         "Apply early aggression to test opponent defaults",
