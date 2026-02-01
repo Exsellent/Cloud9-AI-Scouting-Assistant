@@ -87,6 +87,9 @@ image::assets/AI_agents.png[Multi-Agent Architecture,width=800,align=center]
 | SystemHealth   | 8406 | Monitoring, resilience, alerting
 |===
 
+**Golden Standard Multi-Agent Design** All agents follow the gold standard of multi-agent systems: clear separation
+of responsibilities, transparent reasoning chains, reproducible outputs, and graceful fallback with health
+monitoring. This ensures reports are structured, auditable, and coach‑ready.
 **Architecture diagrams:**
 
 image::docs/diagrams/architecture.png[System Architecture,width=700,align=center]
