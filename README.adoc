@@ -18,13 +18,14 @@ Powered by **Groq Llama 3.3 70B**, **GRID GraphQL API**, **FastAPI microservices
 image::assets/gameflow.png[Cloud9 AI Scouting Flow,width=800,align=center]
 
 ---
-image:https://img.shields.io/badge/License-MIT-yellow.svg[MIT]
-image:https://img.shields.io/badge/Python-3.12-blue.svg[Python]
-image:https://img.shields.io/badge/Docker-required-blue.svg[Docker]
-image:https://img.shields.io/badge/FastAPI-framework-green.svg[FastAPI]
-image:https://img.shields.io/badge/Groq-LLM-red.svg[Groq]
-image:https://img.shields.io/badge/GRID-Esports_API-orange.svg[GRID]
-image:https://img.shields.io/badge/n8n-orchestration-orange.svg[n8n]
+
+image:https://img.shields.io/badge/License-MIT-yellow.svg[License: MIT, link=https://opensource.org/licenses/MIT]
+image:https://img.shields.io/badge/python-3.12-blue.svg[Python 3.12, link=https://www.python.org/downloads/]
+image:https://img.shields.io/badge/docker-required-blue.svg[Docker, link=https://www.docker.com/]
+image:https://img.shields.io/badge/FastAPI-framework-green.svg[FastAPI, link=https://fastapi.tiangolo.com/]
+image:https://img.shields.io/badge/Groq-LLM-red.svg[Groq, link=https://groq.com/]
+image:https://img.shields.io/badge/GRID-Esports_API-orange.svg[GRID, link=https://grid.gg/]
+image:https://img.shields.io/badge/n8n-orchestration-orange.svg[n8n, link=https://n8n.io/]
 
 ---
 
