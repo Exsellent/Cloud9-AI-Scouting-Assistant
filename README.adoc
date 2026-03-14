@@ -72,7 +72,6 @@ image::assets/AI_agents.png[Multi-Agent Architecture,width=800,align=center]
 
 ---
 
-https://github.com/Exsellent/Cloud9-AI-Scouting-Assistant/blob/main/assets/Cloud9%20AI%20Scouting%20Assistant.mp4
 
 == System Architecture
 
