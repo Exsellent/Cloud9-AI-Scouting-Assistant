@@ -74,6 +74,8 @@ image::assets/AI_agents.png[Multi-Agent Architecture,width=800,align=center]
 
 == System Architecture
 
+video::https://github.com[width=900, options="controls"]
+
 **6 specialized AI agents** working in parallel:
 
 [cols="1,1,3",options="header"]
